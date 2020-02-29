@@ -1,10 +1,6 @@
 <template>
   <div class="message-wrapper" :class="messagePosition">
-    <div
-      v-if="currentConversationType === TIM.TYPES.CONV_C2C"
-      class="c2c-layout"
-      :class="messagePosition"
-    >
+    <div v-if="currentConversationType === TIM.TYPES.CONV_C2C" class="c2c-layout" :class="messagePosition">
       <div class="col-1" v-if="showAvatar">
         <!-- 头像 -->
         <avatar :src="avatar" />
@@ -12,6 +8,7 @@
       <div class="col-2">
         <!-- 消息主体 -->
         <div class="content-wrapper">
+          <!-- 这是前面那个小的转圈圈icon -->
           <message-status-icon v-if="isMine" :message="message" />
           <text-element
             v-if="message.type === TIM.TYPES.MSG_TEXT"
@@ -79,11 +76,7 @@
       </div>
     </div>
 
-    <div
-      v-if="currentConversationType === TIM.TYPES.CONV_GROUP"
-      class="group-layout"
-      :class="messagePosition"
-    >
+    <div v-if="currentConversationType === TIM.TYPES.CONV_GROUP" class="group-layout" :class="messagePosition">
       <!-- 头像 群组没有获取单个头像的接口，暂时无法显示头像-->
       <div class="col-1" v-if="showAvatar" >
         <avatar class="group-member-avatar" :src="avatar" @click.native="showGroupMemberProfile"/>
@@ -220,7 +213,7 @@ export default {
       if (this.currentConversation.type === 'C2C' && !this.message.isRevoked) { // C2C且没有撤回的消息
         return true
       } else if (this.currentConversation.type === 'GROUP' && !this.message.isRevoked) { // group且没有撤回的消息
-        return this.message.type !== this.TIM.TYPES.MSG_GRP_TIP
+        return this.message.type !== this.TIM.TYPES.MSG_GRP_TIP // !群提示消息
       }
       return false
     },
@@ -240,9 +233,9 @@ export default {
     currentConversationType() {
       return this.currentConversation.type
     },
-    isMine() {
+    isMine() { // !true就是我自己的消息
       // console.log(this.currentUserProfile, this.currentConversation);
-      return this.message.flow === 'out'
+      return this.message.flow === 'out' // !out 就是我发出的  in就是别人发给我的
     },
     messagePosition() {
       if (
@@ -277,8 +270,7 @@ export default {
   },
   methods: {
     showGroupMemberProfile(event) {
-      this.tim
-        .getGroupMemberProfile({
+      this.tim.getGroupMemberProfile({
           groupID: this.message.to,
           userIDList: [this.message.from]
         })

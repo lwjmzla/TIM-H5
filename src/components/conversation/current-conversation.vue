@@ -101,6 +101,8 @@ export default {
     }
   },
   watch: {
+    currentMessageList() {
+    },
     currentUnreadCount(next) {
       if (!this.hidden && next > 0) {
         this.tim.setMessageRead({ conversationID: this.currentConversation.conversationID })

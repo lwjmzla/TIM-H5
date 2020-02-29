@@ -39,6 +39,7 @@ export default {
   },
   computed: {
     contentList() {
+      //console.log(decodeText(this.payload)) // ![{name: "text", text: "请问"}, {name: "img",src: "xxxi_48@2x.png}]
       return decodeText(this.payload)
     }
   }

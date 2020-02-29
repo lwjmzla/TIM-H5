@@ -45,6 +45,11 @@ export default {
       currentConversation: state => state.conversation.currentConversation
     })
   },
+  watch: {
+    conversationList(val) {
+      console.log(val,'conversationList')
+    }
+  },
   mounted() {
     window.addEventListener('keydown', this.handleKeydown)
   },
@@ -61,7 +66,9 @@ export default {
         if (!that.timeout) {
           that.timeout = setTimeout(() =>{
             that.timeout = null
-            that.tim.getConversationList().then(() => {
+            that.tim.getConversationList().then((imResponse) => {
+              const conversationList = imResponse.data.conversationList 
+              console.log(conversationList, 'refreshConversation')
               that.$store.commit('showMessage', {
                 message: '刷新成功',
                 type: 'success'

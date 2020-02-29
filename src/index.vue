@@ -92,7 +92,7 @@ export default {
       this.tim.on(this.TIM.EVENT.ERROR, this.onError)
       // 收到新消息
       this.tim.on(this.TIM.EVENT.MESSAGE_RECEIVED, this.onReceiveMessage)
-      // 会话列表更新
+      // !会话列表更新
       this.tim.on(this.TIM.EVENT.CONVERSATION_LIST_UPDATED, this.onUpdateConversationList)
       // 群组列表更新
       this.tim.on(this.TIM.EVENT.GROUP_LIST_UPDATED, this.onUpdateGroupList)
@@ -101,10 +101,10 @@ export default {
     },
     onReceiveMessage({ data: messageList }) { //!接收到新消息时候触发，历史消息不算
       //console.log(messageList,1111) // !{conversationType: "C2C"/"GROUP"}
-      this.handleVideoMessage(messageList)
-      this.handleAt(messageList)
-      this.handleQuitGroupTip(messageList)
-      this.$store.commit('pushCurrentMessageList', messageList)
+      // this.handleVideoMessage(messageList)
+      // this.handleAt(messageList) // !@
+      // this.handleQuitGroupTip(messageList)
+      this.$store.commit('pushCurrentMessageList', messageList) // !推送新消息
     },
     onError({ data }) {
       if (data.message !== 'Network Error') {
@@ -129,7 +129,7 @@ export default {
               message: error.message
             })
           })
-        this.$store.dispatch('getBlacklist') // !这个不需要移植
+        // this.$store.dispatch('getBlacklist') // !这个不需要移植
       }
     },
     kickedOutReason(type) {
@@ -153,6 +153,7 @@ export default {
       this.$store.commit('reset')
     },
     onUpdateConversationList(event) {
+      // console.log(event,'onUpdateConversationList') //!这里会接收几次数据
       this.$store.commit('updateConversationList', event.data)
     },
     onUpdateGroupList(event) {
@@ -181,36 +182,36 @@ export default {
      * 处理 @ 我的消息
      * @param {Message[]} messageList
      */
-    handleAt(messageList) {
-      // 筛选有 @ 符号的文本消息
-      const atTextMessageList = messageList.filter(
-        message =>
-          message.type === this.TIM.TYPES.MSG_TEXT &&
-          message.payload.text.includes('@')
-      )
-      for (let i = 0; i < atTextMessageList.length; i++) {
-        const message = atTextMessageList[i]
-        const matched = message.payload.text.match(/@\w+/g)
-        if (!matched) {
-          continue
-        }
-        // @ 我的
-        if (matched.includes(`@${this.currentUserProfile.userID}`)) {
-          // 当前页面不可见时，调用window.Notification接口，系统级别通知。
-          if (this.$store.getters.hidden) {
-            this.notifyMe(message)
-          }
-          Notification({
-            title: `有人在群${message.conversationID.slice(5)}提到了你`,
-            message: message.payload.text,
-            duration: 3000
-          })
-          this.$bus.$emit('new-messsage-at-me', {
-            data: { conversationID: message.conversationID }
-          })
-        }
-      }
-    },
+    // handleAt(messageList) {
+    //   // 筛选有 @ 符号的文本消息
+    //   const atTextMessageList = messageList.filter(
+    //     message =>
+    //       message.type === this.TIM.TYPES.MSG_TEXT &&
+    //       message.payload.text.includes('@')
+    //   )
+    //   for (let i = 0; i < atTextMessageList.length; i++) {
+    //     const message = atTextMessageList[i]
+    //     const matched = message.payload.text.match(/@\w+/g)
+    //     if (!matched) {
+    //       continue
+    //     }
+    //     // @ 我的
+    //     if (matched.includes(`@${this.currentUserProfile.userID}`)) {
+    //       // 当前页面不可见时，调用window.Notification接口，系统级别通知。
+    //       if (this.$store.getters.hidden) {
+    //         this.notifyMe(message)
+    //       }
+    //       Notification({
+    //         title: `有人在群${message.conversationID.slice(5)}提到了你`,
+    //         message: message.payload.text,
+    //         duration: 3000
+    //       })
+    //       this.$bus.$emit('new-messsage-at-me', {
+    //         data: { conversationID: message.conversationID }
+    //       })
+    //     }
+    //   }
+    // },
     selectConversation(conversationID) {
       if (conversationID !== this.currentConversation.conversationID) {
         this.$store.dispatch('checkoutConversation',conversationID)
@@ -224,45 +225,45 @@ export default {
         return false
       }
     },
-    handleVideoMessage(messageList) {
-      const videoMessageList = messageList.filter(
-        message => message.type === this.TIM.TYPES.MSG_CUSTOM && this.isJsonStr(message.payload.data)
-      )
-      if (videoMessageList.length === 0) return
-      const videoPayload = JSON.parse(videoMessageList[0].payload.data)
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_DIALING) {
-        if (this.isBusy) {
-          this.$bus.$emit('busy', videoPayload, videoMessageList[0])
-          return
-        }
-        this.$store.commit('GENERATE_VIDEO_ROOM', videoPayload.room_id)
-        this.selectConversation(videoMessageList[0].conversationID) // 切换当前会话页
-        if (videoMessageList[0].from !== this.userID) {
-          this.$bus.$emit('isCalled')
-        }
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_SPONSOR_CANCEL) {
-        this.$bus.$emit('missCall')
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_REJECT) {
-        this.$bus.$emit('isRefused')
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_SPONSOR_TIMEOUT) {
-        this.$bus.$emit('missCall')
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_ACCEPTED) {
-        this.$bus.$emit('isAccept')
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_HANGUP) {
-        this.$bus.$emit('isHungUp')
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_LINE_BUSY) {
-        this.$bus.$emit('isRefused')
-      }
-      if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_ERROR) {
-        this.$bus.$emit('isRefused')
-      }
-    },
+    // handleVideoMessage(messageList) {
+    //   const videoMessageList = messageList.filter(
+    //     message => message.type === this.TIM.TYPES.MSG_CUSTOM && this.isJsonStr(message.payload.data)
+    //   )
+    //   if (videoMessageList.length === 0) return
+    //   const videoPayload = JSON.parse(videoMessageList[0].payload.data)
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_DIALING) {
+    //     if (this.isBusy) {
+    //       this.$bus.$emit('busy', videoPayload, videoMessageList[0])
+    //       return
+    //     }
+    //     this.$store.commit('GENERATE_VIDEO_ROOM', videoPayload.room_id)
+    //     this.selectConversation(videoMessageList[0].conversationID) // 切换当前会话页
+    //     if (videoMessageList[0].from !== this.userID) {
+    //       this.$bus.$emit('isCalled')
+    //     }
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_SPONSOR_CANCEL) {
+    //     this.$bus.$emit('missCall')
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_REJECT) {
+    //     this.$bus.$emit('isRefused')
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_SPONSOR_TIMEOUT) {
+    //     this.$bus.$emit('missCall')
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_ACCEPTED) {
+    //     this.$bus.$emit('isAccept')
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_HANGUP) {
+    //     this.$bus.$emit('isHungUp')
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_LINE_BUSY) {
+    //     this.$bus.$emit('isRefused')
+    //   }
+    //   if (videoPayload.action === ACTION.VIDEO_CALL_ACTION_ERROR) {
+    //     this.$bus.$emit('isRefused')
+    //   }
+    // },
     /**
      * 使用 window.Notification 进行全局的系统通知
      * @param {Message} message
@@ -300,23 +301,23 @@ export default {
      * 收到有群成员退群/被踢出的groupTip时，需要将相关群成员从当前会话的群成员列表中移除
      * @param {Message[]} messageList
      */
-    handleQuitGroupTip(messageList) {
-      // 筛选出当前会话的退群/被踢群的 groupTip
-      const groupTips = messageList.filter(message => {
-        return this.currentConversation.conversationID === message.conversationID &&
-          message.type === this.TIM.TYPES.MSG_GRP_TIP &&
-          (message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_QUIT || 
-          message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_KICKED_OUT) 
-      })
-      // 清理当前会话的群成员列表
-      if (groupTips.length > 0) {
-        groupTips.forEach(groupTip => {
-          if (Array.isArray(groupTip.payload.userIDList) || groupTip.payload.userIDList.length > 0) {
-            this.$store.commit('deleteGroupMemberList', groupTip.payload.userIDList)
-          }
-        })
-      }
-    }
+    // handleQuitGroupTip(messageList) {
+    //   // 筛选出当前会话的退群/被踢群的 groupTip
+    //   const groupTips = messageList.filter(message => {
+    //     return this.currentConversation.conversationID === message.conversationID &&
+    //       message.type === this.TIM.TYPES.MSG_GRP_TIP &&
+    //       (message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_QUIT || 
+    //       message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_KICKED_OUT) 
+    //   })
+    //   // 清理当前会话的群成员列表
+    //   if (groupTips.length > 0) {
+    //     groupTips.forEach(groupTip => {
+    //       if (Array.isArray(groupTip.payload.userIDList) || groupTip.payload.userIDList.length > 0) {
+    //         this.$store.commit('deleteGroupMemberList', groupTip.payload.userIDList)
+    //       }
+    //     })
+    //   }
+    // }
   }
 }
 </script>

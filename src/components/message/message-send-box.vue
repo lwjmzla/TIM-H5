@@ -327,8 +327,7 @@ export default {
         description: '',
         extension: ''
       })
-      this.tim
-        .sendMessage(message)
+      this.tim.sendMessage(message)
         .then(() => {
           Object.assign(this, {
             rate: 5,

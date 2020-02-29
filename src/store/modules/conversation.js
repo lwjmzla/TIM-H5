@@ -32,11 +32,12 @@ const conversationModules = {
     },
     totalUnreadCount: state => {
       const result = state.conversationList.reduce((count, conversation) => {
+        //console.log(conversation,333)
         // 当前会话不计算总未读
         if (!store.getters.hidden && state.currentConversation.conversationID === conversation.conversationID) {
           return count
         }
-        return count + conversation.unreadCount
+        return count + conversation.unreadCount // !每个conversation都有unreadCount
       }, 0)
       titleNotify(result)
       return result
@@ -55,11 +56,11 @@ const conversationModules = {
      * @param {Object} state
      * @param {Conversation} conversation
      */
-    updateCurrentConversation(state, conversation) {
+    updateCurrentConversation(state, conversation) { // !
       state.currentConversation = conversation
       state.currentMessageList = []
       state.nextReqMessageID = ''
-      state.isCompleted = false
+      state.isCompleted = false // !当前会话消息列表是否已经拉完了所有消息
     },
     /**
      * 更新会话列表
@@ -86,6 +87,7 @@ const conversationModules = {
      * @returns
      */
     pushCurrentMessageList(state, data) {
+      console.log(!state.currentConversation.conversationID,'pushCurrentMessageList')
       // 还没当前会话，则跳过
       if (!state.currentConversation.conversationID) {
         return
@@ -135,7 +137,9 @@ const conversationModules = {
         return
       }
       const { nextReqMessageID, currentMessageList } = context.state
+      // !nextReqMessageID  用于分页续拉的消息 ID。第一次拉取时该字段可不填，每次调用该接口会返回该字段，续拉时将返回字段填入即可。
       tim.getMessageList({ conversationID, nextReqMessageID, count: 15 }).then(imReponse => {
+        console.log(imReponse.data, 222)
         // 更新messageID，续拉时要用到
         context.state.nextReqMessageID = imReponse.data.nextReqMessageID
         context.state.isCompleted = imReponse.data.isCompleted
@@ -149,7 +153,7 @@ const conversationModules = {
      * @param {Object} context
      * @param {String} conversationID
      */
-    checkoutConversation(context, conversationID) {
+    checkoutConversation(context, conversationID) { // !点击item切换会话
       context.commit('resetCurrentMemberList')
       // 1.切换会话前，将切换前的会话进行已读上报
       if (context.state.currentConversation.conversationID) {
@@ -161,9 +165,10 @@ const conversationModules = {
       // 3. 获取会话信息
       return tim.getConversationProfile(conversationID).then(({ data }) => {
         // 3.1 更新当前会话
-        context.commit('updateCurrentConversation', data.conversation)
+        context.commit('updateCurrentConversation', data.conversation)  // !点击item切换会话-- 得到 currentConversation
+        console.log(data.conversation,1111)
         // 3.2 获取消息列表
-        context.dispatch('getMessageList', conversationID)
+        context.dispatch('getMessageList', conversationID)  // !点击item切换会话-- 得到 currentMessageList
         // 3.3 拉取第一页群成员列表
         if (data.conversation.type === TIM.TYPES.CONV_GROUP) {
           return context.dispatch('getGroupMemberList', data.conversation.groupProfile.groupID)

@@ -132,7 +132,7 @@ export default {
       return this.conversation.lastMessage.messageForShow
     },
     ...mapState({
-      currentConversation: state => state.conversation.currentConversation,
+      currentConversation: state => state.conversation.currentConversation, // !vuex
       currentUserProfile: state => state.user.currentUserProfile
     }),
     ...mapGetters(['toAccount'])
@@ -150,6 +150,7 @@ export default {
   },
   methods: {
     selectConversation() {
+      // !this.conversation.conversationID 当前item的
       if (this.conversation.conversationID !== this.currentConversation.conversationID) {
         this.$store.dispatch(
           'checkoutConversation',
